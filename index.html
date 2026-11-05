@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireless Morse Key</title>
+<meta name="description" content="Tap out Morse code and watch it decode in real time — wired, wireless between two XIAO ESP32-C3 boards, or straight from your keyboard. Over Web Serial.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Wireless Morse Key</h1>
+  <p class="tag">Tap a key, hear the beep, watch it turn into letters — across the room or straight from your spacebar.</p>
+  <nav>
+    <a href="#firmware">Firmware</a>
+    <a href="#about">About</a>
+    <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo">Source</a>
+    <a href="https://interactive-hardware-interfacing.github.io/">All tools</a>
+  </nav>
+</header>
+
+<div class="bar">
+  <button id="connect" class="primary">Connect bridge</button>
+  <button id="sim">Try without hardware</button>
+  <button id="disconnect">Disconnect</button>
+  <label class="inline"><input type="checkbox" id="kbmode"> Keyboard mode</label>
+  <span id="mode">—</span>
+  <span id="status">Not connected</span>
+</div>
+
+<div class="note" id="nowebserial" hidden>
+  This browser can’t open USB serial ports. Use <strong>Chrome</strong> or <strong>Edge</strong> on a laptop or desktop. <strong>Keyboard mode</strong> and <strong>Try without hardware</strong> work anywhere.
+</div>
+
+<div id="kbhint" hidden>Hold the <strong>SPACEBAR</strong> like a telegraph key: short taps are dots, longer holds are dashes. Pause between letters.</div>
+
+<div class="panel">
+  <h2>Timing</h2>
+  <canvas id="strip" width="620" height="120"></canvas>
+  <div class="ditrow">
+    <label for="dit" class="k">dit length <span id="ditval">150</span> ms</label>
+    <input type="range" id="dit" min="60" max="400" value="150" step="10">
+    <button id="clear">Clear</button>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h2>Now sending</h2>
+    <div class="symbols" id="symbols"></div>
+    <h2 style="margin-top:14px">Decoded</h2>
+    <div class="decoded" id="decoded"></div>
+  </div>
+  <div class="panel">
+    <h2>Morse alphabet</h2>
+    <div id="alphabet"></div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:16px">
+  <h2>Serial log</h2>
+  <div id="log"></div>
+  <div class="logbar">
+    <input id="logcmd" placeholder="(this demo has no bridge commands)" disabled>
+    <button id="logsend" disabled>Send</button>
+  </div>
+</div>
+
+<!-- ================= ABOUT ================= -->
+<section class="doc" id="about">
+  <h2>About this demo</h2>
+
+  <h3>What it shows</h3>
+  <p>
+    Before text messages there was Morse code: press a key short for a dot, long for a dash, and the gaps
+    between presses separate the letters. Here you key it in and the computer decodes it live — and the same
+    page works three ways, so it always has something to show.
+  </p>
+  <p><strong>Three ways to drive it:</strong></p>
+  <ul>
+    <li><strong>Wired</strong> — a key and buzzer on one board plugged into the laptop.</li>
+    <li><strong>Wireless</strong> — key on a remote board, received by a bridge across the room.</li>
+    <li><strong>Keyboard</strong> — no hardware at all: hold the spacebar. Great as a backup if a board dies mid-tour.</li>
+  </ul>
+  <p><strong>Try this during the tour:</strong> tick Keyboard mode and tap <em>· · ·　— — —　· · ·</em> (SOS). Then hand a
+    student the real key and have them send their initials.</p>
+
+  <h3>Hardware</h3>
+  <table>
+    <tr><th>Setup</th><th>Boards</th><th>Extras</th></tr>
+    <tr><td>Wired</td><td>1× XIAO ESP32-C3 (laptop)</td><td>Pushbutton on D1, buzzer on D3</td></tr>
+    <tr><td>Wireless</td><td>2× XIAO ESP32-C3</td><td>Key board: button on D1. Bridge: buzzer on D3, jumper D8→GND</td></tr>
+    <tr><td>Keyboard</td><td>none</td><td>Just a browser</td></tr>
+  </table>
+  <p class="tag">One firmware file for every board. A jumper from <strong>D8 to GND</strong> at boot makes a board the wireless bridge;
+    no jumper makes it a key (which also works as the wired board when it’s the one plugged in).</p>
+
+  <h3>Wiring</h3>
+  <div class="wiringfig">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" font-family="system-ui, sans-serif" font-size="12">
+      <style>
+        .board { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
+        .lbl { fill: var(--ink); } .mut { fill: var(--muted); }
+        .wire { fill: none; stroke: var(--accent); stroke-width: 2; }
+        .ant { fill: none; stroke: var(--ok); stroke-width: 2; }
+        .rf { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 4; }
+        .pad { fill: var(--grid); stroke: var(--muted); stroke-width: 1; }
+      </style>
+      <!-- wired on top row -->
+      <rect x="20" y="20" width="80" height="48" rx="6" class="board"/>
+      <text x="60" y="40" text-anchor="middle" class="lbl" font-size="11">Laptop</text>
+      <text x="60" y="56" text-anchor="middle" class="mut" font-size="9">WIRED setup</text>
+      <path d="M100 44 H 140" class="wire"/>
+      <rect x="140" y="16" width="120" height="56" rx="6" class="board"/>
+      <text x="200" y="38" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (key)</text>
+      <text x="200" y="54" text-anchor="middle" class="mut" font-size="9">button D1 · buzzer D3</text>
+      <text x="290" y="46" class="mut" font-size="10">← wired: key + buzzer on one board</text>
+
+      <!-- wireless on bottom -->
+      <rect x="20" y="130" width="120" height="56" rx="6" class="board"/>
+      <text x="80" y="152" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (key)</text>
+      <text x="80" y="168" text-anchor="middle" class="mut" font-size="9">button D1</text>
+      <circle cx="80" cy="130" r="4" class="pad"/><path d="M80 130 V 118 h 18" class="ant"/>
+      <path d="M140 158 H 300" class="rf"/><text x="220" y="151" text-anchor="middle" class="mut" font-size="9">ESP-NOW</text>
+      <rect x="300" y="130" width="130" height="56" rx="6" class="board"/>
+      <text x="365" y="150" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (bridge)</text>
+      <text x="365" y="165" text-anchor="middle" class="mut" font-size="9">buzzer D3 · D8→GND</text>
+      <circle cx="300" cy="130" r="4" class="pad"/><path d="M300 130 V 118 h 18" class="ant"/>
+      <path d="M430 158 H 470" class="wire"/>
+      <rect x="470" y="132" width="80" height="48" rx="6" class="board"/>
+      <text x="510" y="160" text-anchor="middle" class="mut" font-size="10">Laptop</text>
+      <text x="20" y="210" class="mut" font-size="10">Button: D1 → GND (internal pull-up). Buzzer: D3 → piezo → GND. Jumper D8 → GND = bridge role.</text>
+    </svg>
+  </div>
+  <table>
+    <tr><th>Signal</th><th>Pin</th><th>Note</th></tr>
+    <tr><td>Key button</td><td>D1 → GND</td><td>Momentary; internal pull-up, no resistor</td></tr>
+    <tr><td>Buzzer</td><td>D3 → piezo → GND</td><td>On the wired board and the bridge</td></tr>
+    <tr><td>Role jumper</td><td>D8 → GND</td><td>Present = wireless bridge; absent = key</td></tr>
+    <tr><td>Antenna</td><td>u.FL</td><td>Wireless setup only; clip on firmly</td></tr>
+  </table>
+
+  <h3>How it works</h3>
+  <p>
+    The board reports clean key <strong>edges</strong> — “down at t”, “up at t” — over USB. All the timing lives in
+    this page: a press shorter than about two dits is a dot, longer is a dash; a gap of about three dits ends a
+    letter, seven ends a word. The <code>dit length</code> slider sets the pace. Keyboard mode feeds the exact
+    same decoder from your spacebar. Edge line format is in
+    <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/PROTOCOL.md">PROTOCOL.md</a>.
+  </p>
+  <p><strong>Known quirks:</strong></p>
+  <ul>
+    <li>Decoding depends on rhythm. If letters run together, raise the dit length; if everything reads as dashes, lower it.</li>
+    <li>The buzzer is a passive piezo on a GPIO — a plain on/off tone, not a pure sine. Fine for the room.</li>
+    <li>Wireless setup: both boards pin channel 6, antennas clipped on.</li>
+    <li>Set the <strong>D8</strong> jumper before power-up — the role is read once at boot.</li>
+    <li>Flashing stuck? Hold <strong>BOOT</strong>, tap <strong>RESET</strong>, release <strong>BOOT</strong>.</li>
+  </ul>
+</section>
+
+<!-- ================= FIRMWARE ================= -->
+<section class="doc" id="firmware">
+  <h2>Put the firmware on the boards</h2>
+  <p>One file, <code>firmware/code.py</code>, on every board. The role is picked by a jumper at boot — no editing.</p>
+  <ol class="steps">
+    <li><strong>Install CircuitPython</strong> on each XIAO ESP32-C3 if needed (<a href="https://circuitpython.org/board/seeed_xiao_esp32c3/">board page</a>).</li>
+    <li><strong>Copy</strong> <code>firmware/code.py</code> to each board.</li>
+    <li><strong>Wired:</strong> one board with a button on D1 and a buzzer on D3, plugged into the laptop. Done.</li>
+    <li><strong>Wireless:</strong> one board as the key (button on D1), and a second as the bridge — add a buzzer on D3 and a jumper from <strong>D8 to GND</strong>, plug the bridge into the laptop.</li>
+    <li><strong>Connect</strong> (for wired/wireless): click <strong>Connect bridge</strong> and pick the <em>USB JTAG/serial</em> port. Or just tick <strong>Keyboard mode</strong> and use the spacebar.</li>
+  </ol>
+</section>
+
+<footer>
+  Wireless Morse Key v0.1.0 · Last updated 2026-11-04 · Part of
+  <a href="https://interactive-hardware-interfacing.github.io/">Interactive Hardware Interfacing</a>.
+  Works in Chrome and Edge via Web Serial.
+  <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/LICENSE">GPL-2.0</a>.
+  Maintained by <a href="https://github.com/LC-Linkous">LC Linkous</a>.
+</footer>
+
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
