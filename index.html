@@ -13,13 +13,19 @@
 <header>
   <h1>Wireless Morse Key</h1>
   <p class="tag">Tap a key, hear the beep, watch it turn into letters — across the room or straight from your spacebar.</p>
-  <nav>
-    <a href="#firmware">Firmware</a>
-    <a href="#about">About</a>
+  <nav aria-label="Page">
+    <a href="#" data-view="" aria-current="page">Instrument</a>
+    <a href="#hardware" data-view="hardware" aria-current="false">Hardware</a>
+    <a href="#firmware" data-view="firmware" aria-current="false">Firmware</a>
+    <a href="#about" data-view="about" aria-current="false">About</a>
+    <span class="navsep" aria-hidden="true"></span>
     <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo">Source</a>
     <a href="https://interactive-hardware-interfacing.github.io/">All tools</a>
   </nav>
 </header>
+
+<!-- ================= INSTRUMENT ================= -->
+<div id="instrument">
 
 <div class="bar">
   <button id="connect" class="primary">Connect bridge</button>
@@ -69,38 +75,29 @@
   </div>
 </div>
 
-<!-- ================= ABOUT ================= -->
-<section class="doc" id="about">
-  <h2>About this demo</h2>
+</div><!-- /instrument -->
 
-  <h3>What it shows</h3>
-  <p>
-    Before text messages there was Morse code: press a key short for a dot, long for a dash, and the gaps
-    between presses separate the letters. Here you key it in and the computer decodes it live — and the same
-    page works three ways, so it always has something to show.
-  </p>
-  <p><strong>Three ways to drive it:</strong></p>
-  <ul>
-    <li><strong>Wired</strong> — a key and buzzer on one board plugged into the laptop.</li>
-    <li><strong>Wireless</strong> — key on a remote board, received by a bridge across the room.</li>
-    <li><strong>Keyboard</strong> — no hardware at all: hold the spacebar. Great as a backup if a board dies mid-tour.</li>
-  </ul>
-  <p><strong>Try this during the tour:</strong> tick Keyboard mode and tap <em>· · ·　— — —　· · ·</em> (SOS). Then hand a
-    student the real key and have them send their initials.</p>
+<!-- ================= HARDWARE ================= -->
+<section class="view" id="hardware" aria-label="Hardware" hidden>
+  <div class="viewhead">
+    <h2>Hardware</h2>
+    <p class="lede">Which boards, which pins, and the one jumper that picks a board’s job.</p>
+    <button type="button" class="small" data-back>Back to instrument</button>
+  </div>
 
-  <h3>Hardware</h3>
+  <h3>Three setups</h3>
   <table>
     <tr><th>Setup</th><th>Boards</th><th>Extras</th></tr>
-    <tr><td>Wired</td><td>1× XIAO ESP32-C3 (laptop)</td><td>Pushbutton on D1, buzzer on D3</td></tr>
-    <tr><td>Wireless</td><td>2× XIAO ESP32-C3</td><td>Key board: button on D1. Bridge: buzzer on D3, jumper D8→GND</td></tr>
-    <tr><td>Keyboard</td><td>none</td><td>Just a browser</td></tr>
+    <tr><td>Wired</td><td>1× Seeed XIAO ESP32-C3, plugged into the laptop</td><td>Pushbutton on D1, piezo buzzer on D3</td></tr>
+    <tr><td>Wireless</td><td>2× XIAO ESP32-C3, both with u.FL antennas</td><td><em>Key</em> board: button on D1, USB-bank powered. <em>Bridge</em> board: buzzer on D3, jumper D8→GND, plugged into the laptop</td></tr>
+    <tr><td>Keyboard</td><td>none</td><td>Just a browser — hold the spacebar</td></tr>
   </table>
-  <p class="tag">One firmware file for every board. A jumper from <strong>D8 to GND</strong> at boot makes a board the wireless bridge;
-    no jumper makes it a key (which also works as the wired board when it’s the one plugged in).</p>
+  <p class="tag">One firmware file on every board. A jumper from <strong>D8 to GND</strong> at boot makes a board the wireless bridge;
+    no jumper makes it a key, which is also the right role for the single wired board.</p>
 
   <h3>Wiring</h3>
   <div class="wiringfig">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" font-family="system-ui, sans-serif" font-size="12">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" font-family="system-ui, sans-serif" font-size="12" role="img" aria-label="Wired setup: laptop to one XIAO C3 with button on D1 and buzzer on D3. Wireless setup: a XIAO C3 key board with button on D1 sends over ESP-NOW to a XIAO C3 bridge with buzzer on D3 and D8 jumpered to ground, which is plugged into the laptop.">
       <style>
         .board { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
         .lbl { fill: var(--ink); } .mut { fill: var(--muted); }
@@ -138,44 +135,130 @@
   <table>
     <tr><th>Signal</th><th>Pin</th><th>Note</th></tr>
     <tr><td>Key button</td><td>D1 → GND</td><td>Momentary; internal pull-up, no resistor</td></tr>
-    <tr><td>Buzzer</td><td>D3 → piezo → GND</td><td>On the wired board and the bridge</td></tr>
-    <tr><td>Role jumper</td><td>D8 → GND</td><td>Present = wireless bridge; absent = key</td></tr>
-    <tr><td>Antenna</td><td>u.FL</td><td>Wireless setup only; clip on firmly</td></tr>
+    <tr><td>Buzzer</td><td>D3 → piezo → GND</td><td>On the wired board and the bridge. Passive piezo, driven as a plain on/off tone</td></tr>
+    <tr><td>Role jumper</td><td>D8 → GND</td><td>Present at boot = wireless bridge; absent = key</td></tr>
+    <tr><td>Antenna</td><td>u.FL</td><td>Wireless setup only; clip on firmly before power</td></tr>
   </table>
+
+  <h3>Parts</h3>
+  <ul>
+    <li>Seeed XIAO ESP32-C3 — one for wired, two for wireless — with the u.FL antenna that ships with it.</li>
+    <li>A momentary pushbutton (any tactile switch works; a real straight key is more fun).</li>
+    <li>A passive piezo buzzer.</li>
+    <li>For the bridge: a jumper wire or 2-pin header shunt between D8 and GND.</li>
+    <li>USB-C data cables (not charge-only) and, for the remote key, a USB power bank.</li>
+  </ul>
+
+  <h3>Things that bite</h3>
+  <ul>
+    <li>Set the <strong>D8</strong> jumper before power-up — the role is read once at boot.</li>
+    <li>Both wireless boards pin Wi-Fi channel 6 and need their antennas clipped on; range without an antenna is a few feet.</li>
+    <li>A board that won’t take firmware: hold <strong>BOOT</strong> (B), tap <strong>RESET</strong> (R), release BOOT, then try again.</li>
+    <li>If the chooser shows no port, the cable is the usual suspect — many USB-C cables are charge-only.</li>
+  </ul>
+  <p class="tag">Pinout detail and a parts list are in <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/wiring/wiring.md">wiring/wiring.md</a>.</p>
+</section>
+
+<!-- ================= FIRMWARE ================= -->
+<section class="view" id="firmware" aria-label="Firmware" hidden>
+  <div class="viewhead">
+    <h2>Put the firmware on the boards</h2>
+    <p class="lede">One file, <code>firmware/code.py</code>, on every board, written straight from this page. Chrome or Edge.</p>
+    <button type="button" class="small" data-back>Back to instrument</button>
+  </div>
+
+  <div class="steps">
+    <div class="step"><b>1. Plug in</b><p>Connect one XIAO ESP32-C3 over USB. If the instrument is connected to a board, this page disconnects it first.</p></div>
+    <div class="step"><b>2. Install</b><p>Click <b>Install firmware</b> and pick the board’s port (<em>USB JTAG/serial debug unit</em>). The page writes <code>code.py</code> over CircuitPython’s REPL, checks its size and CRC on the board, reboots it, and waits for the firmware’s first line.</p></div>
+    <div class="step"><b>3. Repeat</b><p>For the wireless setup, do the same on the second board. The firmware is identical; the <b>D8→GND</b> jumper on the bridge picks its role at boot.</p></div>
+    <div class="step"><b>4. Connect</b><p>Back on the instrument, click <b>Connect bridge</b> and pick the same port. Or skip all of this: tick <b>Keyboard mode</b> and use the spacebar.</p></div>
+  </div>
+
+  <div class="panel fwpanel">
+    <div class="fwrow">
+      <button id="fwInstall" class="primary">Install firmware</button>
+      <span id="fwStatus" class="fwstatus">Ready. Plug a board in and click Install.</span>
+    </div>
+    <progress id="fwBar" max="1" value="0" hidden></progress>
+    <div class="note" id="fwNoRepl" hidden>
+      <strong>No CircuitPython on that board.</strong> A XIAO ESP32-C3 fresh from the bag runs Seeed’s factory sketch, not CircuitPython. Install CircuitPython once with the button below, then come back to <b>Install firmware</b>.
+    </div>
+    <div class="cpflash">
+      <h3>Bare board? Install CircuitPython first</h3>
+      <ol>
+        <li>Download the <b>.bin</b> (not the .uf2) for the XIAO ESP32-C3 from <a href="https://circuitpython.org/board/seeed_xiao_esp32c3/" target="_blank" rel="noopener">circuitpython.org</a>. The download site doesn’t let a page fetch it directly, so it’s a save-then-pick.</li>
+        <li><button id="cpLoad" class="small">Choose .bin…</button> <input type="file" id="cpFile" accept=".bin" hidden> <span id="cpName" class="tag">nothing chosen</span></li>
+        <li><button id="cpFlash" class="small" disabled>Flash CircuitPython</button> — erases the board and writes the image (about a minute). If the chip doesn’t answer, unplug, hold <b>BOOT</b> while plugging back in, and retry.</li>
+      </ol>
+      <p class="tag">This step uses <a href="https://github.com/espressif/esptool-js">esptool-js</a>, kept in <code>flasher/</code> under its own licence (Apache-2.0).</p>
+    </div>
+    <h3>Log</h3>
+    <div id="fwLog" class="fwlog" aria-live="polite"></div>
+  </div>
+
+  <details>
+    <summary>Doing it by hand instead</summary>
+    <ul>
+      <li><strong>Thonny:</strong> Tools → Options → Interpreter → <em>CircuitPython (generic)</em>, pick the port, then File → Save as… → <em>CircuitPython device</em>, name it <code>code.py</code>.</li>
+      <li><strong>CircuitPython from a terminal:</strong> <code>pip install esptool</code>, then <code>esptool.py --chip esp32c3 --port COMn erase_flash</code> and <code>esptool.py --chip esp32c3 --port COMn write_flash 0x0 adafruit-circuitpython-seeed_xiao_esp32c3-en_US-&lt;version&gt;.bin</code>.</li>
+      <li>The REPL exchange the page uses is written out in <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/PROTOCOL.md">PROTOCOL.md</a>.</li>
+    </ul>
+  </details>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="view" id="about" aria-label="About this demo" hidden>
+  <div class="viewhead">
+    <h2>About this demo</h2>
+    <p class="lede">What it shows, how to run it in front of a room, and how the decoding works.</p>
+    <button type="button" class="small" data-back>Back to instrument</button>
+  </div>
+
+  <h3>What it shows</h3>
+  <p>
+    Before text messages there was Morse code: press a key short for a dot, long for a dash, and the gaps
+    between presses separate the letters. Here you key it in and the computer decodes it live — and the same
+    page works three ways, so it always has something to show.
+  </p>
+  <ul>
+    <li><strong>Wired</strong> — a key and buzzer on one board plugged into the laptop.</li>
+    <li><strong>Wireless</strong> — key on a remote board, received by a bridge across the room.</li>
+    <li><strong>Keyboard</strong> — no hardware at all: hold the spacebar. Great as a backup if a board dies mid-tour.</li>
+  </ul>
+  <p><strong>Try this during the tour:</strong> tick Keyboard mode and tap <em>· · ·　— — —　· · ·</em> (SOS). Then hand a
+    student the real key and have them send their initials.</p>
 
   <h3>How it works</h3>
   <p>
     The board reports clean key <strong>edges</strong> — “down at t”, “up at t” — over USB. All the timing lives in
     this page: a press shorter than about two dits is a dot, longer is a dash; a gap of about three dits ends a
     letter, seven ends a word. The <code>dit length</code> slider sets the pace. Keyboard mode feeds the exact
-    same decoder from your spacebar. Edge line format is in
+    same decoder from your spacebar. The edge line format is in
     <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/PROTOCOL.md">PROTOCOL.md</a>.
   </p>
   <p><strong>Known quirks:</strong></p>
   <ul>
     <li>Decoding depends on rhythm. If letters run together, raise the dit length; if everything reads as dashes, lower it.</li>
-    <li>The buzzer is a passive piezo on a GPIO — a plain on/off tone, not a pure sine. Fine for the room.</li>
-    <li>Wireless setup: both boards pin channel 6, antennas clipped on.</li>
-    <li>Set the <strong>D8</strong> jumper before power-up — the role is read once at boot.</li>
-    <li>Flashing stuck? Hold <strong>BOOT</strong>, tap <strong>RESET</strong>, release <strong>BOOT</strong>.</li>
+    <li>The sidetone from the page is a sine wave; the buzzer on the board is a plain on/off piezo tone. Both are fine for the room.</li>
+    <li>Audio only starts after you tick the Audio box — browsers won’t play sound before a click.</li>
   </ul>
-</section>
 
-<!-- ================= FIRMWARE ================= -->
-<section class="doc" id="firmware">
-  <h2>Put the firmware on the boards</h2>
-  <p>One file, <code>firmware/code.py</code>, on every board. The role is picked by a jumper at boot — no editing.</p>
-  <ol class="steps">
-    <li><strong>Install CircuitPython</strong> on each XIAO ESP32-C3 if needed (<a href="https://circuitpython.org/board/seeed_xiao_esp32c3/">board page</a>).</li>
-    <li><strong>Copy</strong> <code>firmware/code.py</code> to each board.</li>
-    <li><strong>Wired:</strong> one board with a button on D1 and a buzzer on D3, plugged into the laptop. Done.</li>
-    <li><strong>Wireless:</strong> one board as the key (button on D1), and a second as the bridge — add a buzzer on D3 and a jumper from <strong>D8 to GND</strong>, plug the bridge into the laptop.</li>
-    <li><strong>Connect</strong> (for wired/wireless): click <strong>Connect bridge</strong> and pick the <em>USB JTAG/serial</em> port. Or just tick <strong>Keyboard mode</strong> and use the spacebar.</li>
-  </ol>
+  <h3>The pieces</h3>
+  <table>
+    <tr><th>Part</th><th>What it is</th></tr>
+    <tr><td><code>index.html</code>, <code>css/</code>, <code>js/</code></td><td>This page. No build step, no framework; view source and you have it.</td></tr>
+    <tr><td><code>js/decoder.js</code></td><td>Edges → dits/dahs → letters.</td></tr>
+    <tr><td><code>js/bridge.js</code></td><td>Web Serial reader for the board’s line-JSON.</td></tr>
+    <tr><td><code>js/device/</code>, <code>flasher/</code></td><td>The Firmware tab: CircuitPython raw REPL, and esptool-js for bare boards.</td></tr>
+    <tr><td><code>firmware/code.py</code></td><td>The one CircuitPython file every board runs.</td></tr>
+    <tr><td><code>PROTOCOL.md</code>, <code>wiring/</code></td><td>The serial contract and the hookup.</td></tr>
+  </table>
+  <p class="tag">Part of <a href="https://interactive-hardware-interfacing.github.io/">Interactive Hardware Interfacing</a>.
+    GPL-2.0, except <code>flasher/</code> (Apache-2.0) — see <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/LICENSES.md">LICENSES.md</a>.</p>
 </section>
 
 <footer>
-  Wireless Morse Key v0.1.0 · Last updated 2026-11-04 · Part of
+  Wireless Morse Key v0.2.0 · Last updated 2026-11-05 · Part of
   <a href="https://interactive-hardware-interfacing.github.io/">Interactive Hardware Interfacing</a>.
   Works in Chrome and Edge via Web Serial.
   <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/LICENSE">GPL-2.0</a>.

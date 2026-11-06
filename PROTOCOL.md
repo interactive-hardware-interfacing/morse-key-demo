@@ -63,3 +63,24 @@ Relative to the tunable **dit** length:
 - release gap ≥ 3 dits → end of letter; ≥ 5–7 dits → word space
 
 Keyboard mode feeds the same decoder from the spacebar, so no board is needed.
+
+## Installing (the Firmware tab)
+
+Not part of the demo protocol — this is how the page gets `code.py` onto a
+board. Same port, 115200 8N1 (the C3's USB-JTAG/serial ignores the rate).
+It is CircuitPython's raw REPL, the exchange Thonny and mpremote use:
+
+| step | page sends | expects |
+|---|---|---|
+| interrupt | `\r\x03\x03` (up to 4×, with `\r` and `\x02` fallbacks) | `>>> ` |
+| enter raw | `\r\x01` | `raw REPL; CTRL-B to exit\r\n>` |
+| exec | code in 128-byte chunks, 8 ms apart, then `\x04` | `OK` · stdout · `\x04` · stderr · `\x04` · `>` |
+| exit raw | `\r\x02` | `>>> ` |
+| soft reboot | `\x04` at the friendly prompt | boot output until a `{"t":"hello"` line (15 s max) |
+
+The write is `f=open('code.py','wb')`, then one `f.write(b'…')` per 384-byte
+chunk, `f.close()`, then the board prints `os.stat` size and `binascii.crc32`
+of the file read back in 512-byte pieces. Both must match what was sent.
+
+A bare board (no REPL answers) gets CircuitPython first through
+`flasher/` — the ROM bootloader protocol, handled by esptool-js.

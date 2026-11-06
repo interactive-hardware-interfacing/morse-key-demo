@@ -13,6 +13,8 @@
 import { Bridge } from './bridge.js';
 import { SimBridge } from './sim.js';
 import { MorseDecoder, MORSE } from './decoder.js';
+import { initViews } from './views.js';
+import { initInstall } from './install.js';
 
 const $ = s => document.querySelector(s);
 const logEl = $('#log');
@@ -163,12 +165,12 @@ function onLine(obj) {
 // ---- keyboard mode: spacebar as a straight key ----
 let spaceDown = false;
 function kbDown(e) {
-  if (!keyboardMode || e.code !== 'Space' || e.repeat) return;
+  if (!keyboardMode || e.code !== 'Space' || e.repeat || views.current) return;
   e.preventDefault(); if (spaceDown) return; spaceDown = true;
   onEdge(true, performance.now() - perfBase);
 }
 function kbUp(e) {
-  if (!keyboardMode || e.code !== 'Space') return;
+  if (!keyboardMode || e.code !== 'Space' || views.current) return;
   e.preventDefault(); spaceDown = false;
   onEdge(false, performance.now() - perfBase);
 }
@@ -217,6 +219,17 @@ $('#kbmode').addEventListener('change', () => {
   if (keyboardMode && bridge) stop();
   setStatus(keyboardMode ? 'Keyboard mode' : 'Not connected', false);
 });
+
+// ---- doc views + firmware install ----
+const views = initViews(
+  $('#instrument'),
+  { hardware: $('#hardware'), firmware: $('#firmware'), about: $('#about') },
+  [...document.querySelectorAll('nav a[data-view]')],
+);
+initInstall({
+  install: $('#fwInstall'), status: $('#fwStatus'), bar: $('#fwBar'), log: $('#fwLog'), noRepl: $('#fwNoRepl'),
+  cpFile: $('#cpFile'), cpLoad: $('#cpLoad'), cpName: $('#cpName'), cpFlash: $('#cpFlash'),
+}, { releaseSerial: async () => { if (bridge && !simulated) await stop(); } });
 
 if (!navigator.serial) $('#nowebserial').hidden = false;
 buildAlphabet();
