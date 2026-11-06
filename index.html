@@ -5,12 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wireless Morse Key</title>
 <meta name="description" content="Tap out Morse code and watch it decode in real time — wired, wireless between two XIAO ESP32-C3 boards, or straight from your keyboard. Over Web Serial.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="wrap">
 
 <header>
+  <p class="eyebrow"><a href="https://interactive-hardware-interfacing.github.io/#wireless">Wireless communication</a> · demo</p>
   <h1>Wireless Morse Key</h1>
   <p class="tag">Tap a key, hear the beep, watch it turn into letters — across the room or straight from your spacebar.</p>
   <nav aria-label="Page">
@@ -66,12 +70,12 @@
   </div>
 </div>
 
-<div class="panel" style="margin-top:16px">
-  <h2>Serial log</h2>
+<div class="termpanel">
+  <div class="termbar"><span class="dots"><i></i><i></i><i></i></span><span>serial log · 115200 8N1</span></div>
   <div id="log"></div>
   <div class="logbar">
     <input id="logcmd" placeholder="(this demo has no bridge commands)" disabled>
-    <button id="logsend" disabled>Send</button>
+    <button id="logsend" class="small" disabled>Send</button>
   </div>
 </div>
 

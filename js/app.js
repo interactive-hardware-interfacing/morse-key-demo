@@ -30,6 +30,10 @@ let currentSymbols = '';
 const strip = $('#strip'), sctx = strip.getContext('2d');
 const trace = []; // {ms, down}
 let keyState = false, baseMs = null;
+// The board's (or simulator's) clock and the page's clock are unrelated, so
+// "now on the board's clock" is extrapolated from the last edge we saw.
+let lastEdgeMs = null, lastEdgePerf = null;
+function boardNow() { return lastEdgeMs == null ? 0 : lastEdgeMs + (performance.now() - lastEdgePerf); }
 // Size the canvas bitmap to its on-screen size × devicePixelRatio so text and
 // lines stay crisp. CSS controls the layout size; this just follows it.
 function fitStrip() {
@@ -43,6 +47,7 @@ function fitStrip() {
 new ResizeObserver(() => drawStrip()).observe(strip);
 function pushEdge(down, ms) {
   if (baseMs == null) baseMs = ms;
+  lastEdgeMs = ms; lastEdgePerf = performance.now();
   trace.push({ t: ms - baseMs, down });
   while (trace.length > 4000) trace.shift();
   keyState = down;
@@ -145,8 +150,7 @@ function onEdge(down, ms) {
 
 // periodic flush so a trailing letter resolves, plus redraw
 setInterval(() => {
-  const nowMs = (baseMs == null) ? 0 : (performance.now() - perfBase + baseMs);
-  applyEvents(decoder.flush(nowMs));
+  applyEvents(decoder.flush(boardNow()));
   // If a key-up edge was lost (unplugged mid-press, sim stopped, etc.), don't
   // leave the beep running forever.
   if (toneOnSince != null && performance.now() - toneOnSince > TONE_WATCHDOG_MS) { silence(); keyState = false; }
@@ -200,7 +204,7 @@ $('#clear').addEventListener('click', () => {
   decoder = new MorseDecoder(Number($('#dit').value));
   highlightPattern('');
   // also clear the timing waveform and stop any tone that was sounding
-  trace.length = 0; keyState = false; baseMs = null;
+  trace.length = 0; keyState = false; baseMs = null; lastEdgeMs = null; lastEdgePerf = null;
   silence();
   drawStrip();
 });
