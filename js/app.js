@@ -84,11 +84,19 @@ function drawStrip() {
 }
 
 // ---- alphabet chart ----
+// Everything the decoder can produce, grouped: letters, digits, punctuation.
 function buildAlphabet() {
   const el = $('#alphabet');
-  const letters = Object.entries(MORSE).filter(([, c]) => /[A-Z]/.test(c));
-  el.innerHTML = letters.map(([pat, c]) =>
-    `<span class="al" data-pat="${pat}"><b>${c}</b> ${pat.replace(/\./g, '·').replace(/-/g, '–')}</span>`).join('');
+  const chip = ([pat, c]) => `<span class="al" data-pat="${pat}"><b>${c}</b> ${pat.replace(/\./g, '·').replace(/-/g, '–')}</span>`;
+  const groups = [
+    ['Letters', ([, c]) => /^[A-Z]$/.test(c)],
+    ['Digits', ([, c]) => /^[0-9]$/.test(c)],
+    ['Punctuation', ([, c]) => !/^[A-Z0-9]$/.test(c)],
+  ];
+  el.innerHTML = groups.map(([name, test]) => {
+    const items = Object.entries(MORSE).filter(test);
+    return items.length ? `<div class="algroup"><span class="alname">${name}</span>${items.map(chip).join('')}</div>` : '';
+  }).join('');
 }
 function highlightPattern(pat) {
   document.querySelectorAll('.al').forEach(s => s.classList.toggle('hot', s.dataset.pat === pat && pat));

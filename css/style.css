@@ -187,7 +187,9 @@ footer a { color: var(--muted); } footer a:hover { color: var(--accent); }
 .ditrow input[type=range] { flex: 1; max-width: 320px; }
 .symbols { font-family: var(--mono); font-size: 34px; min-height: 1.3em; letter-spacing: 6px; color: var(--accent); line-height: 1.2; }
 .decoded { font-family: var(--mono); font-size: 24px; min-height: 1.3em; word-break: break-all; line-height: 1.3; }
-#alphabet { display: flex; flex-wrap: wrap; gap: 6px; }
+#alphabet { display: flex; flex-direction: column; gap: 10px; }
+.algroup { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.alname { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); flex-basis: 100%; }
 .al { font-family: var(--mono); font-size: 12.5px; padding: 4px 9px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); color: var(--muted); }
 .al b { color: var(--text); margin-right: 2px; }
 .al.hot { background: var(--accent-dim); border-color: transparent; }
