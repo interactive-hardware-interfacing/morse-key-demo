@@ -161,7 +161,7 @@ let perfBase = performance.now();
 // ---- line handler ----
 function setMode(text) { $('#mode').textContent = text; }
 function onLine(obj) {
-  if (obj.t === 'hello') { setMode(obj.mode === 'wireless' ? 'Wireless' : 'Wired'); log(`[bridge] ${obj.role} / ${obj.mode}${obj.simulated ? ' (sim)' : ''}\n`); return; }
+  if (obj.t === 'hello') { setMode(obj.role === 'bridge' ? 'Wireless' : 'Wired'); log(`[board] role ${obj.role}${obj.simulated ? ' (sim)' : ''}\n`); return; }
   if (obj.t === 'idle') return;
   if (obj.t === 'edge') onEdge(!!obj.down, typeof obj.ms === 'number' ? obj.ms : Date.now());
 }
@@ -231,7 +231,7 @@ const views = initViews(
   [...document.querySelectorAll('nav a[data-view]')],
 );
 initInstall({
-  install: $('#fwInstall'), status: $('#fwStatus'), bar: $('#fwBar'), log: $('#fwLog'), noRepl: $('#fwNoRepl'),
+  installBridge: $('#fwInstallBridge'), installKey: $('#fwInstallKey'), status: $('#fwStatus'), bar: $('#fwBar'), log: $('#fwLog'), noRepl: $('#fwNoRepl'),
   cpFile: $('#cpFile'), cpLoad: $('#cpLoad'), cpName: $('#cpName'), cpFlash: $('#cpFlash'),
 }, { releaseSerial: async () => { if (bridge && !simulated) await stop(); } });
 

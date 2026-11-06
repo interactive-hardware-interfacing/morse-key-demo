@@ -1,6 +1,6 @@
 # morse-key-demo
 
-A browser demo of Morse code: tap a key, hear the beep, and watch it decode
+A browser demo of Morse code: tap a key, hear the sidetone, and watch it decode
 into letters in real time. Works three ways — **wired** (one board), **wireless**
 (two XIAO ESP32-C3 boards), or **keyboard** (hold the spacebar, no hardware at
 all). Over Web Serial, no install, no server.
@@ -20,19 +20,21 @@ Self-contained — copies nothing from the other demos at runtime.
 
 ## Three ways to drive it
 
-- **Wired** — one XIAO C3 with a button on D1 and a buzzer on D3, into the laptop.
-- **Wireless** — a remote key board + a bridge board (jumper D8→GND), over ESP-NOW.
+- **Wired** — one XIAO C3 with a button between D1 and GND, into the laptop.
+- **Wireless** — a remote key board + a bridge board with nothing wired to it, over ESP-NOW.
 - **Keyboard** — tick *Keyboard mode* and hold SPACE. Zero hardware; the backup
   if a board dies mid-tour.
 
-One firmware file ([`firmware/code.py`](firmware/code.py)) for every board; the
-D8 jumper picks the role at boot. Wiring in [`wiring/`](wiring/); the edge
+Two firmware files, [`firmware/key/code.py`](firmware/key/code.py) and
+[`firmware/bridge/code.py`](firmware/bridge/code.py); a board is whichever it
+was last given. No buzzer: the page makes the sound, the board's LED mirrors
+the key. Only the key board needs a breadboard. Wiring in [`wiring/`](wiring/); the edge
 protocol in [`PROTOCOL.md`](PROTOCOL.md).
 
 ## Putting the firmware on a board
 
 The page does it. Open the **Firmware** tab, plug in a XIAO ESP32-C3, click
-**Install firmware**, pick the port. The page writes `code.py` through
+**Install key** or **Install bridge**, pick the port. The page writes `code.py` through
 CircuitPython's raw REPL over Web Serial (the C3 has no `CIRCUITPY` drive, so
 this is the only USB path), verifies size and CRC32 on the board, reboots it,
 and waits for the firmware's first `{"t":"hello"}` line.
@@ -53,7 +55,7 @@ pick it on the Firmware tab, click **Flash CircuitPython**. That path uses
 | `js/bridge.js`, `js/sim.js` | Web Serial reader for the board's line-JSON, and a simulator that keys SOS HI. |
 | `js/install.js`, `js/device/` | The Firmware tab: CircuitPython raw REPL over Web Serial (write, verify, reboot). |
 | `flasher/` | CircuitPython flashing for a bare board (esptool-js). Apache-2.0, see `LICENSES.md`. |
-| `firmware/code.py` | The one CircuitPython file every board runs. |
+| `firmware/key/code.py`, `firmware/bridge/code.py` | One CircuitPython file per role. |
 | `PROTOCOL.md`, `wiring/` | The serial contract and the hookup. |
 
 ## Run locally

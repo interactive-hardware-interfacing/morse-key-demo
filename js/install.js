@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * install.js — the Firmware tab: put firmware/code.py on a XIAO ESP32-C3 from
+ * install.js — the Firmware tab: put the key or bridge code.py on a XIAO ESP32-C3 from
  * the browser, and (for a bare board) put CircuitPython on it first.
  *
  * The C3 has no CIRCUITPY drive, so "copy code.py to the board" means talking
@@ -17,11 +17,11 @@
 import { SerialLink, hasWebSerial } from './device/serial-link.js';
 import { ReplDevice } from './device/repl-device.js';
 
-const FIRMWARE_PATH = 'firmware/code.py';
+const FIRMWARE = { bridge: 'firmware/bridge/code.py', key: 'firmware/key/code.py' };
 const EXPECT_BOARD = /xiao_esp32c3/i;
 
 /**
- * @param {object} ui   { install, status, bar, log, noRepl, cpFile, cpLoad, cpName, cpFlash }
+ * @param {object} ui   { installBridge, installKey, status, bar, log, noRepl, cpFile, cpLoad, cpName, cpFlash }
  * @param {object} opts { releaseSerial: () => Promise<void> }   closes the instrument's own port first
  */
 export function initInstall(ui, { releaseSerial = async () => {} } = {}) {
@@ -37,26 +37,27 @@ export function initInstall(ui, { releaseSerial = async () => {} } = {}) {
   const phase = (t, cls = '') => { ui.status.textContent = t; ui.status.className = 'fwstatus ' + cls; log('— ' + t, 'dim'); };
   const progress = f => { ui.bar.hidden = f == null; if (f != null) ui.bar.value = Math.max(0, Math.min(1, f)); };
   let busy = false;
-  const setBusy = b => { busy = b; ui.install.disabled = b; ui.cpFlash.disabled = b || !image; ui.cpLoad.disabled = b; };
+  const setBusy = b => { busy = b; ui.installBridge.disabled = ui.installKey.disabled = b; ui.cpFlash.disabled = b || !image; ui.cpLoad.disabled = b; };
 
   if (!hasWebSerial()) {
     phase('This browser has no Web Serial. Use Chrome or Edge on a laptop or desktop to install firmware.', 'warn');
-    ui.install.disabled = ui.cpLoad.disabled = ui.cpFlash.disabled = true;
+    ui.installBridge.disabled = ui.installKey.disabled = ui.cpLoad.disabled = ui.cpFlash.disabled = true;
     return;
   }
 
   // ---- 1. code.py over the REPL --------------------------------------------
-  async function install() {
+  async function install(role) {
     if (busy) return;
+    const path = FIRMWARE[role];
     setBusy(true); progress(null); ui.noRepl.hidden = true;
     let link = null, dev = null;
     try {
       await releaseSerial();
-      phase(`fetching ${FIRMWARE_PATH}`);
-      const r = await fetch(FIRMWARE_PATH, { cache: 'no-cache' });
-      if (!r.ok) throw new Error(`could not fetch ${FIRMWARE_PATH} (${r.status})`);
+      phase(`fetching ${path}`);
+      const r = await fetch(path, { cache: 'no-cache' });
+      if (!r.ok) throw new Error(`could not fetch ${path} (${r.status})`);
       const text = await r.text();
-      log(`${FIRMWARE_PATH}: ${text.length} bytes`);
+      log(`${path}: ${text.length} bytes`);
 
       phase('choose the board\'s port in the chooser');
       link = new SerialLink();
@@ -70,14 +71,14 @@ export function initInstall(ui, { releaseSerial = async () => {} } = {}) {
       try { id = await dev.connect(); }
       catch (e) {
         log(e.message, 'warn');
-        phase('No CircuitPython answered. If this is a bare board, install CircuitPython first (step 2), then try again.', 'warn');
+        phase('No CircuitPython answered. If this is a bare board, install CircuitPython first (below), then try again.', 'warn');
         ui.noRepl.hidden = false;
         return;
       }
       log(`board ${id.boardId} · CircuitPython ${id.cpVersion} · uid ${id.uid}`, 'ok');
       if (!EXPECT_BOARD.test(id.boardId)) log(`note: this firmware is written for the XIAO ESP32-C3; the board reports "${id.boardId}". Pins may differ.`, 'warn');
 
-      phase('writing code.py…');
+      phase(`writing code.py (${role} role)…`);
       progress(0);
       await dev.writeText('code.py', text, progress);
       progress(null);
@@ -86,9 +87,12 @@ export function initInstall(ui, { releaseSerial = async () => {} } = {}) {
       const boot = await dev.reboot();
       const hello = /\{"t":"hello"[^\n]*/.exec(boot);
       if (hello) {
-        let mode = '';
-        try { mode = JSON.parse(hello[0]).mode || ''; } catch {}
-        phase(`Done. The board is running the Morse firmware${mode ? ` as "${mode}"` : ''}. Go back to the instrument and click Connect bridge.`, 'ok');
+        let got = '';
+        try { got = JSON.parse(hello[0]).role || ''; } catch {}
+        if (got && got !== role) log(`note: the board reported role "${got}", expected "${role}"`, 'warn');
+        phase(role === 'bridge'
+          ? 'Done. This board is the bridge. Leave it plugged in, go back to the instrument and click Connect bridge.'
+          : 'Done. This board is the key. Plug it into the laptop for the wired setup, or into a USB bank to go wireless.', 'ok');
       } else {
         phase('code.py written and verified, but no hello line was seen within 15 s. Check the boot output above for a Python error.', 'warn');
       }
@@ -102,7 +106,8 @@ export function initInstall(ui, { releaseSerial = async () => {} } = {}) {
       setBusy(false);
     }
   }
-  ui.install.addEventListener('click', install);
+  ui.installBridge.addEventListener('click', () => install('bridge'));
+  ui.installKey.addEventListener('click', () => install('key'));
 
   // ---- 2. CircuitPython itself, for a bare board -------------------------------
   let flasher = null, image = null;

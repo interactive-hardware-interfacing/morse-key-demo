@@ -31,9 +31,8 @@ body:
         - Page — keyboard mode
         - Page — serial log / connect flow
         - Protocol (PROTOCOL.md)
-        - Firmware (`firmware/code.py`) — wired role
-        - Firmware (`firmware/code.py`) — wireless bridge role
-        - Firmware (`firmware/code.py`) — wireless key role
+        - Key firmware (`firmware/key/code.py`)
+        - Bridge firmware (`firmware/bridge/code.py`)
         - Wiring
         - Docs
         - Other

@@ -21,15 +21,17 @@ until the newline arrives; lines that aren't valid JSON are skipped.
 ### `hello`
 ```json
 {"t":"hello","role":"bridge","proto":1,"mode":"wireless"}
-{"t":"hello","role":"wired","proto":1,"mode":"wired"}
+{"t":"hello","role":"key","proto":1,"mode":"wired"}
 ```
-`mode` drives the page’s mode badge.
+`role` says which firmware file the board is running; the page's mode badge
+follows it. A key board plugged into the laptop is the wired setup; the same
+board on a USB bank sends the same edges over the air to a bridge.
 
 ### `edge` — a key transition
 ```json
 {"t":"edge","down":true,"ms":12345}
 ```
-- `down` — true on key press, false on release.
+- `down` — true on key press, false on release. The board's onboard LED mirrors it.
 - `ms` — board milliseconds at the edge.
 
 All timing (dit vs dah, letter and word gaps) is computed **on the page**, not
@@ -78,7 +80,8 @@ It is CircuitPython's raw REPL, the exchange Thonny and mpremote use:
 | exit raw | `\r\x02` | `>>> ` |
 | soft reboot | `\x04` at the friendly prompt | boot output until a `{"t":"hello"` line (15 s max) |
 
-The write is `f=open('code.py','wb')`, then one `f.write(b'…')` per 384-byte
+The page sends `firmware/key/code.py` or `firmware/bridge/code.py`, whichever
+role was clicked. The write is `f=open('code.py','wb')`, then one `f.write(b'…')` per 384-byte
 chunk, `f.close()`, then the board prints `os.stat` size and `binascii.crc32`
 of the file read back in 512-byte pieces. Both must match what was sent.
 

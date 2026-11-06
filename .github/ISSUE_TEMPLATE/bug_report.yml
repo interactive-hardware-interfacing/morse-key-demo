@@ -15,9 +15,8 @@ body:
       options:
         - Web page (live site)
         - Web page (local copy)
-        - Firmware (`firmware/code.py`) — wired role
-        - Firmware (`firmware/code.py`) — wireless bridge role
-        - Firmware (`firmware/code.py`) — wireless key role
+        - Key firmware (`firmware/key/code.py`)
+        - Bridge firmware (`firmware/bridge/code.py`)
         - Wiring
         - Docs / README / PROTOCOL.md
         - Deploy (GitHub Pages)
@@ -46,7 +45,7 @@ body:
     id: hardware
     attributes:
       label: Was hardware connected?
-      description: This demo uses one XIAO ESP32-C3 (wired) or two (wireless key + bridge).
+      description: This demo uses one XIAO ESP32-C3 running the key firmware (wired) or two (key + bridge).
       options:
         - Yes — one board, wired
         - Yes — two boards, wireless

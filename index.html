@@ -85,23 +85,23 @@
 <section class="view" id="hardware" aria-label="Hardware" hidden>
   <div class="viewhead">
     <h2>Hardware</h2>
-    <p class="lede">Which boards, which pins, and the one jumper that picks a board’s job.</p>
+    <p class="lede">Which boards, which pins, and which firmware goes on each.</p>
     <button type="button" class="small" data-back>Back to instrument</button>
   </div>
 
   <h3>Three setups</h3>
   <table>
     <tr><th>Setup</th><th>Boards</th><th>Extras</th></tr>
-    <tr><td>Wired</td><td>1× Seeed XIAO ESP32-C3, plugged into the laptop</td><td>Pushbutton on D1, piezo buzzer on D3</td></tr>
-    <tr><td>Wireless</td><td>2× XIAO ESP32-C3, both with u.FL antennas</td><td><em>Key</em> board: button on D1, USB-bank powered. <em>Bridge</em> board: buzzer on D3, jumper D8→GND, plugged into the laptop</td></tr>
+    <tr><td>Wired</td><td>1× Seeed XIAO ESP32-C3 running the <em>key</em> firmware, plugged into the laptop</td><td>Pushbutton between D1 and GND. That’s it.</td></tr>
+    <tr><td>Wireless</td><td>2× XIAO ESP32-C3, both with u.FL antennas</td><td><em>Key</em> board: button on D1, USB-bank powered. <em>Bridge</em> board: nothing wired, plugged into the laptop</td></tr>
     <tr><td>Keyboard</td><td>none</td><td>Just a browser — hold the spacebar</td></tr>
   </table>
-  <p class="tag">One firmware file on every board. A jumper from <strong>D8 to GND</strong> at boot makes a board the wireless bridge;
-    no jumper makes it a key, which is also the right role for the single wired board.</p>
+  <p class="tag">Two firmware files, <code>key</code> and <code>bridge</code>; the Firmware tab installs either. A board is whichever one it was last given.
+    The sound comes from this page, so no buzzer is needed; each board’s onboard LED mirrors the key.</p>
 
   <h3>Wiring</h3>
   <div class="wiringfig">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" font-family="system-ui, sans-serif" font-size="12" role="img" aria-label="Wired setup: laptop to one XIAO C3 with button on D1 and buzzer on D3. Wireless setup: a XIAO C3 key board with button on D1 sends over ESP-NOW to a XIAO C3 bridge with buzzer on D3 and D8 jumpered to ground, which is plugged into the laptop.">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 230" font-family="system-ui, sans-serif" font-size="12" role="img" aria-label="Wired setup: laptop to one XIAO C3 key board with a button on D1. Wireless setup: a XIAO C3 key board with a button on D1 sends over ESP-NOW to a XIAO C3 bridge board with nothing wired, which is plugged into the laptop.">
       <style>
         .board { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
         .lbl { fill: var(--ink); } .mut { fill: var(--muted); }
@@ -117,8 +117,8 @@
       <path d="M100 44 H 140" class="wire"/>
       <rect x="140" y="16" width="120" height="56" rx="6" class="board"/>
       <text x="200" y="38" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (key)</text>
-      <text x="200" y="54" text-anchor="middle" class="mut" font-size="9">button D1 · buzzer D3</text>
-      <text x="290" y="46" class="mut" font-size="10">← wired: key + buzzer on one board</text>
+      <text x="200" y="54" text-anchor="middle" class="mut" font-size="9">button D1 → GND</text>
+      <text x="290" y="46" class="mut" font-size="10">← wired: one board, one button</text>
 
       <!-- wireless on bottom -->
       <rect x="20" y="130" width="120" height="56" rx="6" class="board"/>
@@ -128,34 +128,32 @@
       <path d="M140 158 H 300" class="rf"/><text x="220" y="151" text-anchor="middle" class="mut" font-size="9">ESP-NOW</text>
       <rect x="300" y="130" width="130" height="56" rx="6" class="board"/>
       <text x="365" y="150" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (bridge)</text>
-      <text x="365" y="165" text-anchor="middle" class="mut" font-size="9">buzzer D3 · D8→GND</text>
+      <text x="365" y="165" text-anchor="middle" class="mut" font-size="9">nothing wired</text>
       <circle cx="300" cy="130" r="4" class="pad"/><path d="M300 130 V 118 h 18" class="ant"/>
       <path d="M430 158 H 470" class="wire"/>
       <rect x="470" y="132" width="80" height="48" rx="6" class="board"/>
       <text x="510" y="160" text-anchor="middle" class="mut" font-size="10">Laptop</text>
-      <text x="20" y="210" class="mut" font-size="10">Button: D1 → GND (internal pull-up). Buzzer: D3 → piezo → GND. Jumper D8 → GND = bridge role.</text>
+      <text x="20" y="210" class="mut" font-size="10">Button: D1 → GND (internal pull-up, no resistor). The role comes from the firmware file, not a jumper.</text>
     </svg>
   </div>
   <table>
     <tr><th>Signal</th><th>Pin</th><th>Note</th></tr>
     <tr><td>Key button</td><td>D1 → GND</td><td>Momentary; internal pull-up, no resistor</td></tr>
-    <tr><td>Buzzer</td><td>D3 → piezo → GND</td><td>On the wired board and the bridge. Passive piezo, driven as a plain on/off tone</td></tr>
-    <tr><td>Role jumper</td><td>D8 → GND</td><td>Present at boot = wireless bridge; absent = key</td></tr>
+    <tr><td>Onboard LED</td><td>—</td><td>Lights while the key is down, on both boards</td></tr>
     <tr><td>Antenna</td><td>u.FL</td><td>Wireless setup only; clip on firmly before power</td></tr>
   </table>
 
   <h3>Parts</h3>
   <ul>
-    <li>Seeed XIAO ESP32-C3 — one for wired, two for wireless — with the u.FL antenna that ships with it.</li>
+    <li>Seeed XIAO ESP32-C3 — one for wired, two for wireless — with the u.FL antenna that ships with it. Only the key board needs a breadboard.</li>
     <li>A momentary pushbutton (any tactile switch works; a real straight key is more fun).</li>
-    <li>A passive piezo buzzer.</li>
-    <li>For the bridge: a jumper wire or 2-pin header shunt between D8 and GND.</li>
     <li>USB-C data cables (not charge-only) and, for the remote key, a USB power bank.</li>
   </ul>
 
   <h3>Things that bite</h3>
   <ul>
-    <li>Set the <strong>D8</strong> jumper before power-up — the role is read once at boot.</li>
+    <li>Swapped the boards? A board is whichever firmware it was last given. Reinstall from the Firmware tab; it takes a few seconds.</li>
+    <li>If you ever add wiring, avoid D0, D8 (SCK) and D9 (MISO) for anything tied to ground at power-up: on the ESP32-C3 they are boot-strapping pins.</li>
     <li>Both wireless boards pin Wi-Fi channel 6 and need their antennas clipped on; range without an antenna is a few feet.</li>
     <li>A board that won’t take firmware: hold <strong>BOOT</strong> (B), tap <strong>RESET</strong> (R), release BOOT, then try again.</li>
     <li>If the chooser shows no port, the cable is the usual suspect — many USB-C cables are charge-only.</li>
@@ -167,25 +165,26 @@
 <section class="view" id="firmware" aria-label="Firmware" hidden>
   <div class="viewhead">
     <h2>Put the firmware on the boards</h2>
-    <p class="lede">One file, <code>firmware/code.py</code>, on every board, written straight from this page. Chrome or Edge.</p>
+    <p class="lede">Two roles, <code>key</code> and <code>bridge</code>, each a single <code>code.py</code> written straight from this page. Chrome or Edge.</p>
     <button type="button" class="small" data-back>Back to instrument</button>
   </div>
 
   <div class="steps">
     <div class="step"><b>1. Plug in</b><p>Connect one XIAO ESP32-C3 over USB. If the instrument is connected to a board, this page disconnects it first.</p></div>
-    <div class="step"><b>2. Install</b><p>Click <b>Install firmware</b> and pick the board’s port (<em>USB JTAG/serial debug unit</em>). The page writes <code>code.py</code> over CircuitPython’s REPL, checks its size and CRC on the board, reboots it, and waits for the firmware’s first line.</p></div>
-    <div class="step"><b>3. Repeat</b><p>For the wireless setup, do the same on the second board. The firmware is identical; the <b>D8→GND</b> jumper on the bridge picks its role at boot.</p></div>
-    <div class="step"><b>4. Connect</b><p>Back on the instrument, click <b>Connect bridge</b> and pick the same port. Or skip all of this: tick <b>Keyboard mode</b> and use the spacebar.</p></div>
+    <div class="step"><b>2. Pick its job</b><p><b>Install key</b> for the board with the button (this one alone is the wired setup). <b>Install bridge</b> for the board that will stay at the laptop and receive. Pick the port named <em>USB JTAG/serial debug unit</em>.</p></div>
+    <div class="step"><b>3. Wait for the hello</b><p>The page writes <code>code.py</code> over CircuitPython’s REPL, checks its size and CRC on the board, reboots it, and waits for the firmware’s first line. Then do the other board.</p></div>
+    <div class="step"><b>4. Connect</b><p>Back on the instrument, click <b>Connect bridge</b> and pick the port of whichever board is at the laptop. Or skip all of this: tick <b>Keyboard mode</b> and use the spacebar.</p></div>
   </div>
 
   <div class="panel fwpanel">
     <div class="fwrow">
-      <button id="fwInstall" class="primary">Install firmware</button>
-      <span id="fwStatus" class="fwstatus">Ready. Plug a board in and click Install.</span>
+      <button id="fwInstallKey" class="primary">Install key</button>
+      <button id="fwInstallBridge" class="primary">Install bridge</button>
+      <span id="fwStatus" class="fwstatus">Ready. Plug a board in and pick its role.</span>
     </div>
     <progress id="fwBar" max="1" value="0" hidden></progress>
     <div class="note" id="fwNoRepl" hidden>
-      <strong>No CircuitPython on that board.</strong> A XIAO ESP32-C3 fresh from the bag runs Seeed’s factory sketch, not CircuitPython. Install CircuitPython once with the button below, then come back to <b>Install firmware</b>.
+      <strong>No CircuitPython on that board.</strong> A XIAO ESP32-C3 fresh from the bag runs Seeed’s factory sketch, not CircuitPython. Install CircuitPython once with the button below, then come back to <b>Install key</b> or <b>Install bridge</b>.
     </div>
     <div class="cpflash">
       <h3>Bare board? Install CircuitPython first</h3>
@@ -203,7 +202,7 @@
   <details>
     <summary>Doing it by hand instead</summary>
     <ul>
-      <li><strong>Thonny:</strong> Tools → Options → Interpreter → <em>CircuitPython (generic)</em>, pick the port, then File → Save as… → <em>CircuitPython device</em>, name it <code>code.py</code>.</li>
+      <li><strong>Thonny:</strong> Tools → Options → Interpreter → <em>CircuitPython (generic)</em>, pick the port, open <code>firmware/key/code.py</code> or <code>firmware/bridge/code.py</code>, then File → Save as… → <em>CircuitPython device</em>, name it <code>code.py</code>.</li>
       <li><strong>CircuitPython from a terminal:</strong> <code>pip install esptool</code>, then <code>esptool.py --chip esp32c3 --port COMn erase_flash</code> and <code>esptool.py --chip esp32c3 --port COMn write_flash 0x0 adafruit-circuitpython-seeed_xiao_esp32c3-en_US-&lt;version&gt;.bin</code>.</li>
       <li>The REPL exchange the page uses is written out in <a href="https://github.com/interactive-hardware-interfacing/morse-key-demo/blob/main/PROTOCOL.md">PROTOCOL.md</a>.</li>
     </ul>
@@ -225,7 +224,7 @@
     page works three ways, so it always has something to show.
   </p>
   <ul>
-    <li><strong>Wired</strong> — a key and buzzer on one board plugged into the laptop.</li>
+    <li><strong>Wired</strong> — a key on one board plugged into the laptop.</li>
     <li><strong>Wireless</strong> — key on a remote board, received by a bridge across the room.</li>
     <li><strong>Keyboard</strong> — no hardware at all: hold the spacebar. Great as a backup if a board dies mid-tour.</li>
   </ul>
@@ -243,7 +242,6 @@
   <p><strong>Known quirks:</strong></p>
   <ul>
     <li>Decoding depends on rhythm. If letters run together, raise the dit length; if everything reads as dashes, lower it.</li>
-    <li>The sidetone from the page is a sine wave; the buzzer on the board is a plain on/off piezo tone. Both are fine for the room.</li>
     <li>Audio only starts after you tick the Audio box — browsers won’t play sound before a click.</li>
   </ul>
 
@@ -254,7 +252,7 @@
     <tr><td><code>js/decoder.js</code></td><td>Edges → dits/dahs → letters.</td></tr>
     <tr><td><code>js/bridge.js</code></td><td>Web Serial reader for the board’s line-JSON.</td></tr>
     <tr><td><code>js/device/</code>, <code>flasher/</code></td><td>The Firmware tab: CircuitPython raw REPL, and esptool-js for bare boards.</td></tr>
-    <tr><td><code>firmware/code.py</code></td><td>The one CircuitPython file every board runs.</td></tr>
+    <tr><td><code>firmware/key/</code>, <code>firmware/bridge/</code></td><td>One CircuitPython file per role.</td></tr>
     <tr><td><code>PROTOCOL.md</code>, <code>wiring/</code></td><td>The serial contract and the hookup.</td></tr>
   </table>
   <p class="tag">Part of <a href="https://interactive-hardware-interfacing.github.io/">Interactive Hardware Interfacing</a>.

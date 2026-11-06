@@ -17,8 +17,8 @@
   <path d="M100 44 H 140" class="wire"/>
   <rect x="140" y="16" width="120" height="56" rx="6" class="board"/>
   <text x="200" y="38" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (key)</text>
-  <text x="200" y="54" text-anchor="middle" class="mut" font-size="9">button D1 - buzzer D3</text>
-  <text x="290" y="46" class="mut" font-size="10">wired: key + buzzer on one board</text>
+  <text x="200" y="54" text-anchor="middle" class="mut" font-size="9">button D1 to GND</text>
+  <text x="290" y="46" class="mut" font-size="10">wired: one board, one button</text>
   <rect x="20" y="130" width="120" height="56" rx="6" class="board"/>
   <text x="80" y="152" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (key)</text>
   <text x="80" y="168" text-anchor="middle" class="mut" font-size="9">button D1</text>
@@ -26,10 +26,10 @@
   <path d="M140 158 H 300" class="rf"/><text x="220" y="151" text-anchor="middle" class="mut" font-size="9">ESP-NOW</text>
   <rect x="300" y="130" width="130" height="56" rx="6" class="board"/>
   <text x="365" y="150" text-anchor="middle" class="lbl" font-weight="600" font-size="11">XIAO C3 (bridge)</text>
-  <text x="365" y="165" text-anchor="middle" class="mut" font-size="9">buzzer D3 - D8 to GND</text>
+  <text x="365" y="165" text-anchor="middle" class="mut" font-size="9">nothing wired</text>
   <circle cx="300" cy="130" r="4" class="pad"/><path d="M300 130 V 118 h 18" class="ant"/>
   <path d="M430 158 H 470" class="wire"/>
   <rect x="470" y="132" width="80" height="48" rx="6" class="board"/>
   <text x="510" y="160" text-anchor="middle" class="mut" font-size="10">Laptop</text>
-  <text x="20" y="210" class="mut" font-size="10">Button: D1 to GND (internal pull-up). Buzzer: D3 to piezo to GND. Jumper D8 to GND = bridge role.</text>
+  <text x="20" y="210" class="mut" font-size="10">Button: D1 to GND (internal pull-up). Role comes from the firmware file, not a jumper.</text>
 </svg>
