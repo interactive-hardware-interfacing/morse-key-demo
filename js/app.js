@@ -85,9 +85,36 @@ function applyEvents(evs) {
   }
 }
 
+// ---- sidetone audio (Web Audio): beep while the key is down ----
+let audioCtx = null, osc = null, gain = null;
+function ensureAudio() {
+  if (audioCtx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  audioCtx = new AC();
+  osc = audioCtx.createOscillator();
+  gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 600;          // classic CW sidetone
+  gain.gain.value = 0;                // silent until keyed
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+}
+function tone(on) {
+  if (!$('#audio').checked) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const t = audioCtx.currentTime;
+  // short ramp avoids clicks
+  gain.gain.cancelScheduledValues(t);
+  gain.gain.setTargetAtTime(on ? 0.15 : 0, t, 0.005);
+}
+
 // ---- edge entry point (from serial, sim, or keyboard) ----
 function onEdge(down, ms) {
   pushEdge(down, ms);
+  tone(down);
   applyEvents(decoder.feedEdge(down, ms));
 }
 
@@ -139,9 +166,22 @@ async function stop() { if (bridge) { try { await bridge.disconnect(); } catch {
 $('#connect').addEventListener('click', () => start(false));
 $('#sim').addEventListener('click', () => start(true));
 $('#disconnect').addEventListener('click', stop);
-$('#clear').addEventListener('click', () => { decoded = ''; currentSymbols = ''; $('#decoded').textContent = ''; $('#symbols').textContent = ''; decoder = new MorseDecoder(Number($('#dit').value)); highlightPattern(''); });
+$('#clear').addEventListener('click', () => {
+  decoded = ''; currentSymbols = '';
+  $('#decoded').textContent = ''; $('#symbols').textContent = '';
+  decoder = new MorseDecoder(Number($('#dit').value));
+  highlightPattern('');
+  // also clear the timing waveform
+  trace.length = 0; keyState = false; baseMs = null;
+  drawStrip();
+});
 
 $('#dit').addEventListener('input', () => { $('#ditval').textContent = $('#dit').value; decoder.setDit(Number($('#dit').value)); });
+
+$('#audio').addEventListener('change', () => {
+  if ($('#audio').checked) { ensureAudio(); if (audioCtx?.state === 'suspended') audioCtx.resume(); }
+  else if (gain) { gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.005); } // silence immediately
+});
 
 $('#kbmode').addEventListener('change', () => {
   keyboardMode = $('#kbmode').checked;
