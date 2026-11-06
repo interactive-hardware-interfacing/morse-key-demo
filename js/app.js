@@ -28,6 +28,17 @@ let currentSymbols = '';
 const strip = $('#strip'), sctx = strip.getContext('2d');
 const trace = []; // {ms, down}
 let keyState = false, baseMs = null;
+// Size the canvas bitmap to its on-screen size × devicePixelRatio so text and
+// lines stay crisp. CSS controls the layout size; this just follows it.
+function fitStrip() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(strip.clientWidth * dpr));
+  const h = Math.max(1, Math.round(strip.clientHeight * dpr));
+  if (strip.width !== w || strip.height !== h) { strip.width = w; strip.height = h; }
+  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);   // draw in CSS pixels from here on
+  return { W: strip.clientWidth, H: strip.clientHeight };
+}
+new ResizeObserver(() => drawStrip()).observe(strip);
 function pushEdge(down, ms) {
   if (baseMs == null) baseMs = ms;
   trace.push({ t: ms - baseMs, down });
@@ -35,7 +46,7 @@ function pushEdge(down, ms) {
   keyState = down;
 }
 function drawStrip() {
-  const W = strip.width, H = strip.height;
+  const { W, H } = fitStrip();
   sctx.clearRect(0, 0, W, H);
   const windowMs = 6000; // show last 6 s
   const nowT = trace.length ? trace[trace.length - 1].t : 0;
@@ -60,7 +71,7 @@ function drawStrip() {
   const yEnd = (keyState) ? hi : lo;
   if (started) sctx.lineTo(W, yEnd); else { sctx.moveTo(0, lo); sctx.lineTo(W, lo); }
   sctx.stroke();
-  sctx.fillStyle = cssVar('--muted'); sctx.font = '10px system-ui';
+  sctx.fillStyle = cssVar('--muted'); sctx.font = '11px system-ui, sans-serif';
   sctx.fillText('key down', 4, hi - 4);
   sctx.fillText('key up', 4, lo + 12);
 }
@@ -100,16 +111,28 @@ function ensureAudio() {
   osc.connect(gain).connect(audioCtx.destination);
   osc.start();
 }
+let toneOnSince = null;             // performance.now() when the tone started, or null
 function tone(on) {
+  if (!on) { silence(); return; }
   if (!$('#audio').checked) return;
   ensureAudio();
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const t = audioCtx.currentTime;
-  // short ramp avoids clicks
   gain.gain.cancelScheduledValues(t);
-  gain.gain.setTargetAtTime(on ? 0.15 : 0, t, 0.005);
+  gain.gain.setTargetAtTime(0.15, t, 0.005);   // short ramp avoids clicks
+  toneOnSince = performance.now();
 }
+// Cut the sidetone no matter what state the key logic thinks it's in. Called
+// on key-up, Clear, Disconnect, bridge close, and by the watchdog below.
+function silence() {
+  toneOnSince = null;
+  if (!audioCtx || !gain) return;
+  const t = audioCtx.currentTime;
+  gain.gain.cancelScheduledValues(t);
+  gain.gain.setTargetAtTime(0, t, 0.005);
+}
+const TONE_WATCHDOG_MS = 3000;      // longest plausible key-down; a dah at the slowest dit is ~1.2 s
 
 // ---- edge entry point (from serial, sim, or keyboard) ----
 function onEdge(down, ms) {
@@ -122,6 +145,9 @@ function onEdge(down, ms) {
 setInterval(() => {
   const nowMs = (baseMs == null) ? 0 : (performance.now() - perfBase + baseMs);
   applyEvents(decoder.flush(nowMs));
+  // If a key-up edge was lost (unplugged mid-press, sim stopped, etc.), don't
+  // leave the beep running forever.
+  if (toneOnSince != null && performance.now() - toneOnSince > TONE_WATCHDOG_MS) { silence(); keyState = false; }
   drawStrip();
 }, 60);
 let perfBase = performance.now();
@@ -157,11 +183,11 @@ async function start(useSim) {
   bridge = useSim ? new SimBridge() : new Bridge();
   bridge.onLine = onLine;
   bridge.onRaw = t => { if (!useSim) log(t); };
-  bridge.onClose = e => { log(`\n[closed] ${e?.message || ''}\n`); setStatus('Disconnected', false); bridge = null; };
+  bridge.onClose = e => { silence(); keyState = false; log(`\n[closed] ${e?.message || ''}\n`); setStatus('Disconnected', false); bridge = null; };
   try { log(useSim ? '[sim] starting\n' : '[serial] requesting port\n'); await bridge.connect(); setStatus(useSim ? 'Simulator running' : 'Bridge connected', true); }
   catch (e) { log(`[error] ${e.message}\n`); setStatus(e.message, false); bridge = null; }
 }
-async function stop() { if (bridge) { try { await bridge.disconnect(); } catch {} } bridge = null; setStatus('Not connected', false); log('[disconnected]\n'); }
+async function stop() { silence(); keyState = false; if (bridge) { try { await bridge.disconnect(); } catch {} } bridge = null; setStatus('Not connected', false); log('[disconnected]\n'); }
 
 $('#connect').addEventListener('click', () => start(false));
 $('#sim').addEventListener('click', () => start(true));
@@ -171,8 +197,9 @@ $('#clear').addEventListener('click', () => {
   $('#decoded').textContent = ''; $('#symbols').textContent = '';
   decoder = new MorseDecoder(Number($('#dit').value));
   highlightPattern('');
-  // also clear the timing waveform
+  // also clear the timing waveform and stop any tone that was sounding
   trace.length = 0; keyState = false; baseMs = null;
+  silence();
   drawStrip();
 });
 
@@ -180,7 +207,7 @@ $('#dit').addEventListener('input', () => { $('#ditval').textContent = $('#dit')
 
 $('#audio').addEventListener('change', () => {
   if ($('#audio').checked) { ensureAudio(); if (audioCtx?.state === 'suspended') audioCtx.resume(); }
-  else if (gain) { gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.005); } // silence immediately
+  else silence();
 });
 
 $('#kbmode').addEventListener('change', () => {

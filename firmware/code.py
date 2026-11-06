@@ -18,7 +18,7 @@
 #                      which a bridge will relay. (Simplest: one board wired,
 #                      or two boards = one bridge + one key.)
 #
-# Shared bridge line-JSON adds one type for this demo:
+# Bridge line-JSON (see PROTOCOL.md):
 #   {"t":"hello","role":"bridge"|"wired","proto":1,"mode":"wired"|"wireless"}
 #   {"t":"edge","down":true,"ms":12345}      # key pressed  (down=true) / released
 #   {"t":"idle","ms":12345}

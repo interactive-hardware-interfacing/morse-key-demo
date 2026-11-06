@@ -1,10 +1,22 @@
 # Protocol — morse-key-demo
 
-Uses the **shared bridge line-JSON** (115200 8N1) from
-`packet-inspector-demo/PROTOCOL.md`, with one demo-specific line type. Unlike
-the periodic-sample demos, this one reports **edges**, not samples.
+Two parts: the **serial format** (line-JSON over USB) that the page reads,
+and the **5-byte edge packet** the wireless key sends to the bridge over
+ESP-NOW. The board reports **edges** (key down / key up), not samples; all
+timing is done on the page.
 
-## Bridge → page
+## Link
+
+- USB serial (native USB Serial/JTAG on the XIAO C3), **115200 baud, 8N1**.
+- The board is **print-only**: it emits lines, it doesn't require commands.
+  The page may send text lines (the serial-log box); the firmware ignores them.
+- In wireless mode both boards pin **Wi-Fi channel 6**.
+
+## Bridge → page: line-JSON
+
+One compact JSON object per line, newline-terminated. The page parses each line
+and **ignores unknown `t` values and extra keys**. Partial lines are buffered
+until the newline arrives; lines that aren't valid JSON are skipped.
 
 ### `hello`
 ```json
@@ -23,10 +35,11 @@ the periodic-sample demos, this one reports **edges**, not samples.
 All timing (dit vs dah, letter and word gaps) is computed **on the page**, not
 the firmware. See `js/decoder.js`.
 
-### `idle`
+### `idle` — heartbeat when nothing happens
 ```json
 {"t":"idle","ms":12345}
 ```
+Sent after ~750 ms of silence so the page can tell a quiet key from a dead link.
 
 ## Over-the-air payload (wireless key → bridge)
 
