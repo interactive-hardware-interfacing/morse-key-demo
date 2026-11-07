@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=0.2.0">
 </head>
 <body>
 <div class="wrap">
@@ -39,15 +39,16 @@
   <label class="inline"><input type="checkbox" id="audio"> Audio</label>
   <span id="mode">—</span>
   <span id="status">Not connected</span>
+  <button id="presenter" class="small" aria-pressed="false" title="Big and quiet, for the projector (P / Esc)">Presenter</button>
 </div>
 
-<div class="note" id="nowebserial" hidden>
+<div class="note" id="nowebserial" data-presenter="hide" hidden>
   This browser can’t open USB serial ports. Use <strong>Chrome</strong> or <strong>Edge</strong> on a laptop or desktop. <strong>Keyboard mode</strong> and <strong>Try without hardware</strong> work anywhere.
 </div>
 
-<div id="kbhint" hidden>Hold the <strong>SPACEBAR</strong> like a telegraph key: short taps are dots, longer holds are dashes. Pause between letters.</div>
+<div id="kbhint" data-presenter="hide" hidden>Hold the <strong>SPACEBAR</strong> like a telegraph key: short taps are dots, longer holds are dashes. Pause between letters.</div>
 
-<div class="panel">
+<div class="panel" data-presenter="hero">
   <h2>Timing</h2>
   <canvas id="strip" width="620" height="120"></canvas>
   <div class="ditrow">
@@ -58,19 +59,31 @@
 </div>
 
 <div class="grid2">
-  <div class="panel">
+  <div class="panel" data-presenter="hero">
     <h2>Now sending</h2>
     <div class="symbols" id="symbols"></div>
     <h2 style="margin-top:14px">Decoded</h2>
     <div class="decoded" id="decoded"></div>
   </div>
-  <div class="panel">
+  <div class="panel" data-presenter="hide">
     <h2>Morse alphabet</h2>
     <div id="alphabet"></div>
   </div>
 </div>
 
-<div class="termpanel">
+<div class="panel logpanel" data-presenter="hide">
+  <h2>Data logging</h2>
+  <div class="logrow">
+    <button id="recStart" class="primary" disabled>● Record</button>
+    <button id="recStop" disabled>■ Stop</button>
+    <button id="recDownload" disabled>Download .zip</button>
+    <span id="recStatus" class="recstatus"></span>
+    <span class="markgroup"><input id="recMarkLabel" placeholder="mark label, e.g. student 2"><button id="recMark" class="small" disabled>Mark</button></span>
+  </div>
+  <p class="logfiles"><code>edges.csv</code> every key down/up with its timestamp — the raw material for writing your own decoder · <code>symbols.csv</code> each dit and dah · <code>decoded.csv</code> each letter · <code>marks.csv</code> labelled events. Kept in memory until you download.</p>
+</div>
+
+<div class="termpanel" data-presenter="hide">
   <div class="termbar"><span class="dots"><i></i><i></i><i></i></span><span>serial log · 115200 8N1</span></div>
   <div id="log"></div>
   <div class="logbar">
@@ -250,6 +263,7 @@
     <tr><th>Part</th><th>What it is</th></tr>
     <tr><td><code>index.html</code>, <code>css/</code>, <code>js/</code></td><td>This page. No build step, no framework; view source and you have it.</td></tr>
     <tr><td><code>js/decoder.js</code></td><td>Edges → dits/dahs → letters.</td></tr>
+    <tr><td><code>js/logger.js</code>, <code>js/presenter.js</code></td><td>Data logging (CSV zip with marks) and presenter mode.</td></tr>
     <tr><td><code>js/bridge.js</code></td><td>Web Serial reader for the board’s line-JSON.</td></tr>
     <tr><td><code>js/device/</code>, <code>flasher/</code></td><td>The Firmware tab: CircuitPython raw REPL, and esptool-js for bare boards.</td></tr>
     <tr><td><code>firmware/key/</code>, <code>firmware/bridge/</code></td><td>One CircuitPython file per role.</td></tr>
@@ -268,6 +282,6 @@
 </footer>
 
 </div>
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/app.js?v=0.2.0"></script>
 </body>
 </html>

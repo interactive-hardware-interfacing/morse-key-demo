@@ -58,6 +58,20 @@ pick it on the Firmware tab, click **Flash CircuitPython**. That path uses
 | `firmware/key/code.py`, `firmware/bridge/code.py` | One CircuitPython file per role. |
 | `PROTOCOL.md`, `wiring/` | The serial contract and the hookup. |
 
+## Logging data
+
+The **Data logging** panel records while connected, in the simulator, or in
+keyboard mode, and hands over one `.zip`: `edges.csv` (every key down/up
+with its board timestamp — the raw dataset for writing your own decoder),
+`symbols.csv` (each dit and dah as the page decoded it), `decoded.csv` (each
+letter, with a space row at word gaps), and `marks.csv` (labelled events
+from the **Mark** box — "student 2", "wireless from the hall"). Nothing
+touches disk until you click Download.
+
+**Presenter** (or press `P`, except in keyboard mode) hides the log, the
+alphabet chart and settings and enlarges the timing strip and the decoded
+text for a projector. `Esc` leaves it; the choice is remembered.
+
 ## Run locally
 
 ```

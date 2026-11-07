@@ -15,6 +15,8 @@ import { SimBridge } from './sim.js';
 import { MorseDecoder, MORSE } from './decoder.js';
 import { initViews } from './views.js';
 import { initInstall } from './install.js';
+import { initPresenter } from './presenter.js';
+import { CaptureLogger, bindLogPanel } from './logger.js';
 
 const $ = s => document.querySelector(s);
 const logEl = $('#log');
@@ -48,6 +50,7 @@ new ResizeObserver(() => drawStrip()).observe(strip);
 function pushEdge(down, ms) {
   if (baseMs == null) baseMs = ms;
   lastEdgeMs = ms; lastEdgePerf = performance.now();
+  logger.push('edges', [new Date().toISOString(), down ? 1 : 0, ms]);
   trace.push({ t: ms - baseMs, down });
   while (trace.length > 4000) trace.shift();
   keyState = down;
@@ -105,9 +108,9 @@ function highlightPattern(pat) {
 // ---- handle a decoder event list ----
 function applyEvents(evs) {
   for (const ev of evs) {
-    if (ev.symbol) { currentSymbols += ev.symbol; $('#symbols').textContent = currentSymbols.replace(/\./g, '·').replace(/-/g, '–'); highlightPattern(currentSymbols); }
-    if (ev.letter) { decoded += ev.letter; currentSymbols = ''; $('#symbols').textContent = ''; highlightPattern(''); $('#decoded').textContent = decoded; }
-    if (ev.space) { decoded += ' '; $('#decoded').textContent = decoded; }
+    if (ev.symbol) { logger.push('symbols', [new Date().toISOString(), ev.symbol]); currentSymbols += ev.symbol; $('#symbols').textContent = currentSymbols.replace(/\./g, '·').replace(/-/g, '–'); highlightPattern(currentSymbols); }
+    if (ev.letter) { logger.push('decoded', [new Date().toISOString(), ev.letter]); decoded += ev.letter; currentSymbols = ''; $('#symbols').textContent = ''; highlightPattern(''); $('#decoded').textContent = decoded; }
+    if (ev.space) { logger.push('decoded', [new Date().toISOString(), ' ']); decoded += ' '; $('#decoded').textContent = decoded; }
   }
 }
 
@@ -190,7 +193,7 @@ window.addEventListener('keydown', kbDown);
 window.addEventListener('keyup', kbUp);
 
 // ---- controls ----
-function setStatus(t, c) { $('#status').textContent = t; $('#status').className = c ? 'ok' : ''; $('#connect').disabled = c || keyboardMode; $('#sim').disabled = c || keyboardMode; $('#disconnect').disabled = !c; }
+function setStatus(t, c) { if (!c && !keyboardMode && logger.recording) logger.stop(); paintLog(logger); $('#status').textContent = t; $('#status').className = c ? 'ok' : ''; $('#connect').disabled = c || keyboardMode; $('#sim').disabled = c || keyboardMode; $('#disconnect').disabled = !c; }
 
 async function start(useSim) {
   simulated = useSim;
@@ -226,6 +229,7 @@ $('#audio').addEventListener('change', () => {
 
 $('#kbmode').addEventListener('change', () => {
   keyboardMode = $('#kbmode').checked;
+  if (keyboardMode) document.body.dataset.nohotkey = '1'; else delete document.body.dataset.nohotkey;   // spacebar keys; P must not flip presenter
   setMode(keyboardMode ? 'Keyboard' : 'Hardware');
   $('#kbhint').hidden = !keyboardMode;
   if (keyboardMode && bridge) stop();
@@ -242,6 +246,19 @@ initInstall({
   installBridge: $('#fwInstallBridge'), installKey: $('#fwInstallKey'), status: $('#fwStatus'), bar: $('#fwBar'), log: $('#fwLog'), noRepl: $('#fwNoRepl'),
   cpFile: $('#cpFile'), cpLoad: $('#cpLoad'), cpName: $('#cpName'), cpFlash: $('#cpFlash'),
 }, { releaseSerial: async () => { if (bridge && !simulated) await stop(); } });
+
+// ---- presenter mode + data logging ----
+initPresenter($('#presenter'));
+const logger = new CaptureLogger({
+  edges:   ['iso_time', 'down', 'ms'],
+  symbols: ['iso_time', 'symbol'],
+  decoded: ['iso_time', 'char'],
+}, 'morse-key-demo');
+const paintLog = bindLogPanel(logger, $, {
+  isConnected: () => !!bridge || keyboardMode,
+  meta: () => ({ source: keyboardMode ? 'keyboard' : simulated ? 'simulator' : 'board', notes: 'edges.csv: one row per key edge; down=1 press, 0 release; ms = board clock.\nsymbols.csv: . or - as the page decoded them. decoded.csv: letters, with a space row at word gaps.' }),
+  log,
+});
 
 if (!navigator.serial) $('#nowebserial').hidden = false;
 buildAlphabet();
